@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -18,6 +19,9 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Shows user where they are currently pointing
     private GameObject _reticle;
+
+    // Display the distance in text
+    public TMP_Text distanceText;
 
     // Keeps track of the amount of points we have
     private int _pointsAmount = 0;
@@ -38,45 +42,35 @@ public class ScrapsPointsManager : MonoBehaviour
     void CheckHitPoints()
     {
         // Check if there is a raycast hit
-        if (_hits.Count < 1)
+        if (_hits.Count < 1 && _pointsAmount >= scrapPointsGameObjects.Length)
         {
             return;
         }
 
         // If the user is touching the screen and make sure it only happens when we first touch the screen
-        if (!(Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            return;
+            scrapPointsGameObjects[_pointsAmount].SetActive(true);
+            scrapPointsGameObjects[_pointsAmount].transform.position = _hits[0].pose.position;
+            _pointsAmount++;
         }
-
-        if (_pointsAmount > scrapPointsGameObjects.Length)
+        // If the user has ended its touch down of the screen, then we display the distance between the points
+        else if (_pointsAmount >= 2 && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended)
         {
-            return;
+            Console.Write("Checking distances and rendering lines");
+            Vector3 point1 = scrapPointsGameObjects[_pointsAmount - 2].transform.position;
+            Vector3 point2 = scrapPointsGameObjects[_pointsAmount - 1].transform.position;
+            distanceText.text = GetPointsDistances(point1, point2).ToString();
+            line.enabled = true;
+            line.SetPosition(0, point1); 
+            line.SetPosition(1, point2);
         }
-
-        scrapPointsGameObjects[_pointsAmount].SetActive(true);
-        scrapPointsGameObjects[_pointsAmount].transform.position = _hits[0].pose.position;
-        _pointsAmount++;
+        
     }
 
-    void UpdatePoints()
+    float GetPointsDistances(Vector3 point1, Vector3 point2)
     {
-        if (_pointsAmount < 2)
-        {
-            return;
-        }
-
-        for (var index = 0; index < pointsDistances.Length; index++)
-        {
-            // Get the distance between the two points
-            pointsDistances[index] = Vector3.Distance(
-                scrapPointsGameObjects[index].transform.position,
-                scrapPointsGameObjects[index + 1].transform.position
-            );
-            
-        }
-        
-        
+        return Vector3.Distance(point1, point2);
     }
 
     // Start is called before the first frame update
@@ -91,6 +85,5 @@ public class ScrapsPointsManager : MonoBehaviour
     {
         SetRaycastManager();
         CheckHitPoints();
-        UpdatePoints();
     }
 }
