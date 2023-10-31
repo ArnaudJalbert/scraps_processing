@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
@@ -33,6 +34,9 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Default scale of the points
     private Vector3 _sphereScale = new Vector3(0.01f, 0.01f, 0.01f);
+    
+    // Z Offset for the text
+    private Vector3 _yOffset = new Vector3(0f, 0.1f, 0f);
 
     void UpdateReticle()
     {
@@ -72,11 +76,30 @@ public class ScrapsPointsManager : MonoBehaviour
         }
     }
 
+    void WriteDistanceOnLine(Vector3 point1, Vector3 point2, float distance, int position)
+    {
+        GameObject distanceTextObject = new GameObject("Distance Text #" + position);
+        TextMeshPro distanceTextMesh = distanceTextObject.AddComponent<TextMeshPro>();
+
+        string textValue = (distance.ToString() + "m");
+
+        distanceTextMesh.text = textValue;
+        distanceTextMesh.fontSize = 0.5f;
+        distanceTextMesh.color = Color.black;
+        distanceTextMesh.alignment = TextAlignmentOptions.Center;
+        distanceTextMesh.transform.position = ((point1 + point2) / 2f) + _yOffset;
+        // distanceTextMesh.transform.rotation = Quaternion.FromToRotation(Vector3.right, (point2 - point1).normalized);
+        distanceTextMesh.transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+    }
+
     void DrawDistanceLines()
     {
         // Drawing the lines as the points are created
         if (scrapPoints.Count >= _scrapPointsLines.Count + 2)
         {
+            // Position of the line
+            int position = _scrapPointsLines.Count;
+
             // Get the 3D position of the scrap points
             Vector3 point1 = scrapPoints[scrapPoints.Count - 1].transform.position;
             Vector3 point2 = scrapPoints[scrapPoints.Count - 2].transform.position;
@@ -85,7 +108,7 @@ public class ScrapsPointsManager : MonoBehaviour
             float distance = Vector3.Distance(point1, point2);
 
             // Set up the game object for the distance lines
-            GameObject distanceLineObject = new GameObject("Distance Line #" + _scrapPointsLines.Count);
+            GameObject distanceLineObject = new GameObject("Distance Line #" + position);
 
             // Set up the rendered for the lines and link it to the game object
             LineRenderer distanceLine = distanceLineObject.AddComponent<LineRenderer>();
@@ -102,7 +125,7 @@ public class ScrapsPointsManager : MonoBehaviour
             _scrapPointsLines.Add(distanceLine);
 
             // Put text along the line
-            Console.Write(distance);
+            WriteDistanceOnLine(point1, point2, distance, position);
         }
     }
 
