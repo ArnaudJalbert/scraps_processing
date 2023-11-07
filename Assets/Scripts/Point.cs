@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,26 +10,44 @@ namespace ScrapsGeometries
 {
     public class ScrapPoint
     {
-        public GameObject sphere;
-        private int _orderPosition;
-        private ScrapPoint _previousPoint;
-        private ScrapPoint _nextPoint;
-        private ARRaycastHit _hitPoint;
-        private const float _sphereScale = 0.1f;
+        public Vector3 point;
+        public int position;
 
-        public ScrapPoint(int orderPosition, ScrapPoint previousPoint, ARRaycastHit hitPoint)
+        public ScrapPoint(Vector3 point, int position)
         {
-            _orderPosition = orderPosition;
-            _previousPoint = previousPoint;
-            _hitPoint = hitPoint;
-            sphere = CreateSphere();
+            this.point = point;
+            this.position = position;
+        }
+    }
+
+    public class ScrapPointsCollection
+    {
+        private List<ScrapPoint> _scrapPoints;
+
+        public ScrapPointsCollection()
+        {
+            _scrapPoints = new List<ScrapPoint>();
+        }
+        
+        public void AddScrap(Vector3 point, int position)
+        {
+            _scrapPoints.Add(new ScrapPoint(point, position));
         }
 
-        private GameObject CreateSphere()
+        public void RemoveLastScrap()
         {
-            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.localScale = new Vector3(_sphereScale, _sphereScale, _sphereScale);
-            return sphere;
+            _scrapPoints.RemoveAt(_scrapPoints.Count - 1);
+        }
+
+        public override string ToString()
+        {
+            string message = "";
+            foreach (var scrapPoint in _scrapPoints)
+            {
+                message += scrapPoint.position + ": " + scrapPoint.point + "\n";
+            }
+
+            return message;
         }
     }
 }
