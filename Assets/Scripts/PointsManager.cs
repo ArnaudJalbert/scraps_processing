@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using ScrapsGeometries;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -13,6 +11,7 @@ using TextMeshPro = TMPro.TextMeshPro;
 
 public class ScrapsPointsManager : MonoBehaviour
 {
+    // ------------ GAME AND OBJECTS COMPONENTS ----------------
     // Camera of the phone
     public Camera phoneCamera;
 
@@ -22,6 +21,16 @@ public class ScrapsPointsManager : MonoBehaviour
     // Shows user where they are currently pointing
     public GameObject reticle;
 
+    // Anchor point to identify the first point
+    private GameObject _anchor;
+
+    // Lines between the points
+    private List<GameObject> _scrapPointsLines;
+
+    // Texts displaying the distance
+    private List<GameObject> _distanceTexts;
+
+    // ------------ UI COMPONENTS ----------------
     // Register Scrap Button
     public GameObject registerButtonGameObject;
     public Button registerButton;
@@ -29,37 +38,46 @@ public class ScrapsPointsManager : MonoBehaviour
     // Reset Button
     public GameObject resetButtonGameObject;
     public Button resetButton;
-    
+
     // Panel to cover screen while the environment is being scanned
     public GameObject initialMessage;
-    
+
     // Message to tell user to get closer
     public GameObject closerMessage;
 
-    // Lines between the points
-    private List<GameObject> _scrapPointsLines;
+    // Message to tell user that a scrap has been captured
+    public GameObject scrapCaptureMessage;
+    
+    // Register Scrap UI
+    public GameObject registerForm;
 
-    // Distances between points
-    private List<float> _pointsDistances;
-
-    // Texts displaying the distance
-    private List<GameObject> _distanceTexts;
-
+    // ----------- AR COMPONENTS ---------------
     // To manage the rays casted by the users
     private ARRaycastManager _raycastManager;
 
     // Hits with the raycasters
     private List<ARRaycastHit> _hits;
-    private bool _hasHit = false;
-    private Vector3 _hitPoint;
 
-    // Anchor point to identify the first point
-    private GameObject _anchor;
-    private bool _inAnchorMode = false;
+    // Point where the raycaster hit
+    private Vector3 _hitPoint;
+    
+    // ---------- SCRAP POINTS AND DISTANCES ----------
+    // Distances between points
+    private List<float> _pointsDistances;
 
     // Collection of scrap points to be sent
     private ScrapPointsCollection _scrapPointsCollection;
 
+    // --------- STATES VARIABLES -----------
+    private bool _inAnchorMode = false;
+
+    // Disable the capturing capabilities when a loop of points has been selected
+    private bool _capturingDisabled;
+
+    // Indicates if the raycaster has intersected with a plane
+    private bool _hasHit = false;
+
+    // ---------- GEOMETRY STUFF -------------
     // Default scale of the points
     private Vector3 _sphereScale = new Vector3(0.01f, 0.01f, 0.01f);
 
@@ -72,12 +90,16 @@ public class ScrapsPointsManager : MonoBehaviour
         registerButtonGameObject.SetActive(true);
         resetButtonGameObject.SetActive(true);
     }
-    
+
     void SetRaycastManager()
     {
         _hits = new List<ARRaycastHit>();
         _raycastManager.Raycast(new Vector2(Screen.width / 2, Screen.height / 2), _hits,
             TrackableType.PlaneWithinPolygon);
+    }
+
+    void SetHasHit()
+    {
         if (_hits.Count > 0)
         {
             _hasHit = true;
@@ -93,7 +115,11 @@ public class ScrapsPointsManager : MonoBehaviour
     {
         reticle.transform.position = _hits[0].pose.position + (Vector3.up * 0.005f);
         reticle.transform.rotation = _hits[0].pose.rotation;
+    }
 
+    void UpdateCloserMessage()
+    {   
+        // If the phone is too fare from plane, alert the user to get closer
         if (Vector3.Distance(reticle.transform.position, phoneCamera.transform.position) > 0.75)
         {
             closerMessage.SetActive(true);
@@ -106,22 +132,34 @@ public class ScrapsPointsManager : MonoBehaviour
 
     void CheckIfInAnchorZone()
     {
+        // There needs to be at least 2 points set to anchor to the initial point
         if (scrapPoints.Count < 3)
         {
             return;
         }
 
-        if (Vector3.Distance(reticle.transform.position, _anchor.transform.position) < 0.01)
+        if (Vector3.Distance(reticle.transform.position, _anchor.transform.position) < 0.015)
         {
-            reticle.transform.position = _anchor.transform.position + (Vector3.up * 0.005f);
-            reticle.GetComponent<MeshRenderer>().material.color = Color.blue;
-            _inAnchorMode = true;
+            SetReticleToAnchorMode();
         }
-        else if (_inAnchorMode)
+        else if
+            (_inAnchorMode) // If in anchor mode and not close enough to anchor, disable the anchor mode and reset reticle
         {
-            reticle.GetComponent<MeshRenderer>().material.color = Color.red;
-            _inAnchorMode = false;
+            SetReticleToCaptureMode();
         }
+    }
+
+    void SetReticleToAnchorMode()
+    {
+        reticle.transform.position = _anchor.transform.position + (Vector3.up * 0.005f);
+        reticle.GetComponent<MeshRenderer>().material.color = Color.blue;
+        _inAnchorMode = true;
+    }
+
+    void SetReticleToCaptureMode()
+    {
+        reticle.GetComponent<MeshRenderer>().material.color = Color.red;
+        _inAnchorMode = false;
     }
 
     void CheckHitPoints()
@@ -131,19 +169,10 @@ public class ScrapsPointsManager : MonoBehaviour
             Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
             // Create a new sphere to place into space as a point
-            GameObject point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            point.name = "Point #" + scrapPoints.Count;
-            point.transform.localScale = _sphereScale;
+            GameObject point = CreatePoint();
 
-            // If we are anchored to the first point, move the hit point there so it lines up
-            if (_inAnchorMode)
-            {
-                point.transform.position = scrapPoints[0].transform.position;
-            }
-            else
-            {
-                point.transform.position = _hitPoint;
-            }
+            // Set point position depeing on anchor mode and current hit position
+            SetPointPosition(point);
 
             // If it is the first point, identify as the anchor
             if (scrapPoints.Count == 0)
@@ -153,6 +182,28 @@ public class ScrapsPointsManager : MonoBehaviour
 
             // Add it to the collection of points
             scrapPoints.Add(point);
+        }
+    }
+
+    GameObject CreatePoint()
+    {
+        GameObject point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        point.name = "Point #" + scrapPoints.Count;
+        point.transform.localScale = _sphereScale;
+        return point;
+    }
+
+    void SetPointPosition(GameObject point)
+    {
+        // If we are anchored to the first point, move the hit point there so it lines up
+        if (_inAnchorMode && scrapPoints.Count > 0)
+        {
+            point.transform.position = scrapPoints[0].transform.position;
+            _capturingDisabled = true;
+        }
+        else
+        {
+            point.transform.position = _hitPoint;
         }
     }
 
@@ -176,6 +227,8 @@ public class ScrapsPointsManager : MonoBehaviour
         distanceTextMesh.transform.Rotate(new Vector3(0, 180, 0));
         _distanceTexts.Add(distanceTextObject);
     }
+    
+    
 
     void DrawDistanceLines()
     {
@@ -222,8 +275,6 @@ public class ScrapsPointsManager : MonoBehaviour
         {
             _scrapPointsCollection.AddScrap(scrapPoints[i].transform.position, i);
         }
-
-        Console.Write(_scrapPointsCollection);
     }
 
     private void ResetPoints()
@@ -249,8 +300,16 @@ public class ScrapsPointsManager : MonoBehaviour
         _scrapPointsLines = new List<GameObject>();
         // Init the distance texts
         _distanceTexts = new List<GameObject>();
-        // Init the 
+        // Init the scrap points collection
         _scrapPointsCollection = new ScrapPointsCollection();
+        // Disable anchor mode
+        _inAnchorMode = false;
+        // Set reticle to capture mode again
+        SetReticleToCaptureMode();
+        // Re-enable capturing
+        _capturingDisabled = false;
+        // Remove capturing message
+        scrapCaptureMessage.SetActive(false);
     }
 
     // Start is called before the first frame update
@@ -274,7 +333,8 @@ public class ScrapsPointsManager : MonoBehaviour
     void Update()
     {
         SetRaycastManager();
-        if (_hasHit)
+        SetHasHit();
+        if (_hasHit && !_capturingDisabled)
         {
             if (initialMessage.activeSelf)
             {
@@ -282,9 +342,14 @@ public class ScrapsPointsManager : MonoBehaviour
             }
 
             UpdateReticle();
+            UpdateCloserMessage();
             CheckIfInAnchorZone();
             CheckHitPoints();
             DrawDistanceLines();
+        }
+        else if (_capturingDisabled)
+        {
+            scrapCaptureMessage.SetActive(true);
         }
     }
 }
