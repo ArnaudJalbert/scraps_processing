@@ -8,6 +8,8 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using TextMeshPro = TMPro.TextMeshPro;
+using Toggle = UnityEngine.UI.Toggle;
+using UnityEngine.Networking;
 
 public class ScrapsPointsManager : MonoBehaviour
 {
@@ -47,9 +49,16 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Message to tell user that a scrap has been captured
     public GameObject scrapCaptureMessage;
-    
+
     // Register Scrap UI
     public GameObject registerForm;
+    public Button cancelRegisterForm;
+    public Button submitRegisterForm;
+    public TMP_InputField scrapNotes;
+    public TMP_Dropdown textileType;
+    public TMP_Dropdown textileClass;
+    public GameObject useGeolocation;
+    public Toggle useGeolocationComponent;
 
     // ----------- AR COMPONENTS ---------------
     // To manage the rays casted by the users
@@ -60,7 +69,7 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Point where the raycaster hit
     private Vector3 _hitPoint;
-    
+
     // ---------- SCRAP POINTS AND DISTANCES ----------
     // Distances between points
     private List<float> _pointsDistances;
@@ -118,7 +127,7 @@ public class ScrapsPointsManager : MonoBehaviour
     }
 
     void UpdateCloserMessage()
-    {   
+    {
         // If the phone is too fare from plane, alert the user to get closer
         if (Vector3.Distance(reticle.transform.position, phoneCamera.transform.position) > 0.75)
         {
@@ -227,8 +236,7 @@ public class ScrapsPointsManager : MonoBehaviour
         distanceTextMesh.transform.Rotate(new Vector3(0, 180, 0));
         _distanceTexts.Add(distanceTextObject);
     }
-    
-    
+
 
     void DrawDistanceLines()
     {
@@ -267,6 +275,19 @@ public class ScrapsPointsManager : MonoBehaviour
         }
     }
 
+    void DeactivateCaptureUI()
+    {
+        registerButtonGameObject.SetActive(false);
+        resetButtonGameObject.SetActive(false);
+        scrapCaptureMessage.SetActive(false);
+    }
+
+    void ActivateCaptureUI()
+    {
+        registerButtonGameObject.SetActive(true);
+        resetButtonGameObject.SetActive(true);
+    }
+
     void RegisterScraps()
     {
         // Collection of scraps to send to the database
@@ -275,6 +296,29 @@ public class ScrapsPointsManager : MonoBehaviour
         {
             _scrapPointsCollection.AddScrap(scrapPoints[i].transform.position, i);
         }
+
+        DeactivateCaptureUI();
+
+        ActivateRegisterForm();
+    }
+
+    void SubmitScrap()
+    {
+        // Extracting information
+        string enteredScrapNotes = scrapNotes.text;
+        string selectedTextileClass = textileClass.options[textileClass.value].text;
+        string selectedTextileType = textileType.options[textileType.value].text;
+        string selectedUseGeolocation = useGeolocationComponent.isOn.ToString();
+
+        // Send Request 
+        string requestAddress = "http://172.20.10.4:5000/scraps?" + "textile_class=" + selectedTextileClass + "&textile_type=" +
+                         selectedTextileType + "&notes=" + enteredScrapNotes + "&use_geolocation=" +
+                         selectedUseGeolocation;
+        UnityWebRequest www = UnityWebRequest.Put(requestAddress, "");
+        www.SendWebRequest();
+        
+        DeactivateRegisterForm();
+        ResetPoints();
     }
 
     private void ResetPoints()
@@ -312,6 +356,17 @@ public class ScrapsPointsManager : MonoBehaviour
         scrapCaptureMessage.SetActive(false);
     }
 
+    void ActivateRegisterForm()
+    {
+        registerForm.SetActive(true);
+    }
+
+    void DeactivateRegisterForm()
+    {
+        registerForm.SetActive(false);
+        ActivateCaptureUI();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -327,6 +382,13 @@ public class ScrapsPointsManager : MonoBehaviour
         registerButton.onClick.AddListener(RegisterScraps);
         // Event listener to reset the points
         resetButton.onClick.AddListener(ResetPoints);
+        // Event listener to submit the scrap capture
+        submitRegisterForm.onClick.AddListener(SubmitScrap);
+        // Event listener to terminate the register state
+        cancelRegisterForm.onClick.AddListener(DeactivateRegisterForm);
+
+        // Get the toggle geolocation component directly
+        useGeolocationComponent = useGeolocation.GetComponent<Toggle>();
     }
 
     // Update is called once per frame
