@@ -10,12 +10,17 @@ using UnityEngine.XR.ARSubsystems;
 using TextMeshPro = TMPro.TextMeshPro;
 using Toggle = UnityEngine.UI.Toggle;
 using UnityEngine.Networking;
+using SaveScreenshot;
+using GetLocation;
+
 
 public class ScrapsPointsManager : MonoBehaviour
 {
     // ------------ GAME AND OBJECTS COMPONENTS ----------------
     // Camera of the phone
     public Camera phoneCamera;
+    public ScreenshotUploader imageUploader;
+    public TestLocationService location;
 
     // The points that have been ray casted by the user
     public List<GameObject> scrapPoints;
@@ -85,6 +90,8 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Indicates if the raycaster has intersected with a plane
     private bool _hasHit = false;
+
+    private string _timestamp;
 
     // ---------- GEOMETRY STUFF -------------
     // Default scale of the points
@@ -308,15 +315,32 @@ public class ScrapsPointsManager : MonoBehaviour
         string enteredScrapNotes = scrapNotes.text;
         string selectedTextileClass = textileClass.options[textileClass.value].text;
         string selectedTextileType = textileType.options[textileType.value].text;
-        string selectedUseGeolocation = useGeolocationComponent.isOn.ToString();
+        // TODO: Get real data here
+        string scrapColor = "f0f";
+        string userID = "00000001";
 
-        // Send Request 
-        string requestAddress = "http://172.20.10.4:5000/scraps?" + "textile_class=" + selectedTextileClass + "&textile_type=" +
-                         selectedTextileType + "&notes=" + enteredScrapNotes + "&use_geolocation=" +
-                         selectedUseGeolocation;
+        string baseRequest =
+            "http://172.20.10.4:5000/scraps?textile-class={0}&textile-type={1}&color={2}&owner={3}&note='{4}'&dimensions={5}&image={6}";
+        string requestAddress = String.Format(
+            baseRequest,
+            selectedTextileClass,
+            selectedTextileType,
+            scrapColor,
+            userID,
+            enteredScrapNotes,
+            _scrapPointsCollection,
+            _timestamp
+        );
+        if (useGeolocationComponent)
+        {
+            string selectedUseGeolocation = "[" + location.latitude.ToString().Replace(",", ".") + "," +
+                                            location.longitude.ToString().Replace(",", ".") + "]";
+            requestAddress += ("&geolocation=" + selectedUseGeolocation);
+        }
+
         UnityWebRequest www = UnityWebRequest.Put(requestAddress, "");
         www.SendWebRequest();
-        
+
         DeactivateRegisterForm();
         ResetPoints();
     }
@@ -358,6 +382,8 @@ public class ScrapsPointsManager : MonoBehaviour
 
     void ActivateRegisterForm()
     {
+        _timestamp = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString();
+        imageUploader.UploadScreenshot(_timestamp);
         registerForm.SetActive(true);
     }
 
@@ -370,6 +396,8 @@ public class ScrapsPointsManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // start location request
+        location.StartLocation();
         // Set up the raycast manager
         _raycastManager = GetComponent<ARRaycastManager>();
         // Init the list of scrap points

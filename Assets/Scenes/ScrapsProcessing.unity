@@ -1431,6 +1431,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bf5ab1f2e3d461e8d64c0bfaba3006f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &471115474
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 471115476}
+  - component: {fileID: 471115475}
+  m_Layer: 0
+  m_Name: Location
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &471115475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 471115474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b67f1310c47443ceaced18d7e2613c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &471115476
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 471115474}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 585, y: 1266, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &480432934
 GameObject:
   m_ObjectHideFlags: 0
@@ -4415,8 +4459,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: a scrap has been captured, press register scraps to collect data about
-    your scrap or reset to try again
+  m_text: a scrap has been captured, place your phone to see the scrap correctly
+    a picture of it will be taken
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0ed43604a2bba499cb0923ab80bdc252, type: 2}
   m_sharedMaterial: {fileID: 7142065308657938087, guid: 0ed43604a2bba499cb0923ab80bdc252,
@@ -4947,6 +4991,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1551923539}
   m_CullTransparentMesh: 1
+--- !u!1 &1633405536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1633405538}
+  - component: {fileID: 1633405537}
+  m_Layer: 0
+  m_Name: ScreenshotUploader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1633405537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633405536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7d9fce912c64a5d895a792695f90c69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ui: {fileID: 835190481}
+--- !u!4 &1633405538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633405536}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -446.07217, y: 2455.267, z: -60.45609}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1655518118
 GameObject:
   m_ObjectHideFlags: 0
@@ -6003,6 +6092,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   phoneCamera: {fileID: 488950340}
+  imageUploader: {fileID: 1633405537}
+  location: {fileID: 471115475}
   scrapPoints: []
   reticle: {fileID: 931024956}
   registerButtonGameObject: {fileID: 1332797226}
@@ -6335,3 +6426,5 @@ SceneRoots:
   - {fileID: 785293282}
   - {fileID: 872397755}
   - {fileID: 835190485}
+  - {fileID: 1633405538}
+  - {fileID: 471115476}

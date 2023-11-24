@@ -10,23 +10,11 @@ public class RegisterForm : MonoBehaviour
 {
     List<string> textileTypes = new List<string>
     {
-        "Unknown",
-        "Cashmere",
-        "Chenille",
-        "Chiffon",
-        "Cotton",
-        "Leather",
-        "Linen",
-        "Merino Wool",
-        "Suede",
-        "Spandex",
-        "Polyester",
-        "Nylon",
-        "Acrylic",
-        "Polyethylene",
-        "Polypropylene",
-        "Rayon",
-        "Canvas"
+        // TODO: Get the actual data from DB
+        "unknown",
+        "cotton",
+        "wool",
+        "polyester",
     };
 
 
@@ -36,7 +24,7 @@ public class RegisterForm : MonoBehaviour
         var dropdown = GetComponent<TMP_Dropdown>();
 
         dropdown.options.Clear();
-        
+
         foreach (var textileType in textileTypes)
         {
             dropdown.options.Add(new TMP_Dropdown.OptionData(textileType.ToLower()));

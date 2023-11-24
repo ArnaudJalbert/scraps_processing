@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,12 +37,13 @@ namespace ScrapsGeometries
 
         public override string ToString()
         {
-            string message = "";
+            string message = "[";
             foreach (var scrapPoint in _scrapPoints)
             {
-                message += scrapPoint.position + ": " + scrapPoint.point + "\n";
+                message += scrapPoint.point.ToString().Replace("(", "[").Replace(")", "]").Replace(" ", String.Empty) + ",";
             }
-
+            message += "]";
+            
             return message;
         }
     }
