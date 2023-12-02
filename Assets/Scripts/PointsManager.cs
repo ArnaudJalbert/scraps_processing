@@ -21,6 +21,7 @@ public class ScrapsPointsManager : MonoBehaviour
     public Camera phoneCamera;
     public ScreenshotUploader imageUploader;
     public TestLocationService location;
+    public User user;
 
     // The points that have been ray casted by the user
     public List<GameObject> scrapPoints;
@@ -317,16 +318,15 @@ public class ScrapsPointsManager : MonoBehaviour
         string selectedTextileType = textileType.options[textileType.value].text;
         // TODO: Get real data here
         string scrapColor = "f0f";
-        string userID = "00000001";
 
         string baseRequest =
-            "http://172.20.10.4:5000/scraps?textile-class={0}&textile-type={1}&color={2}&owner={3}&note='{4}'&dimensions={5}&image={6}";
+            "https://scraps-processing-api.fly.dev/scraps?textile-class={0}&textile-type={1}&color={2}&owner={3}&note='{4}'&dimensions={5}&image={6}";
         string requestAddress = String.Format(
             baseRequest,
             selectedTextileClass,
             selectedTextileType,
             scrapColor,
-            userID,
+            user.userID,
             enteredScrapNotes,
             _scrapPointsCollection,
             _timestamp

@@ -7,7 +7,7 @@ namespace SaveScreenshot
     public class ScreenshotUploader : MonoBehaviour
     {
         public GameObject ui;
-        private string serverURL = "http://172.20.10.4:5000/upload"; // Replace with your Flask server URL
+        private string serverURL = "https://scraps-processing-api.fly.dev/upload"; // Replace with your Flask server URL
 
         public void UploadScreenshot(string timestamp)
         {   
@@ -19,7 +19,7 @@ namespace SaveScreenshot
         IEnumerator SendScreenshot(string timestamp)
         {
             // Capture a screenshot
-            yield return new WaitForSeconds(0.5f); 
+            yield return new WaitForEndOfFrame(); 
             Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
             texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
             texture.Apply();
