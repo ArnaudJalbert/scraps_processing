@@ -12,6 +12,8 @@ using Toggle = UnityEngine.UI.Toggle;
 using UnityEngine.Networking;
 using SaveScreenshot;
 using GetLocation;
+using System.Text.RegularExpressions;
+using Unity.VisualScripting;
 
 
 public class ScrapsPointsManager : MonoBehaviour
@@ -66,6 +68,20 @@ public class ScrapsPointsManager : MonoBehaviour
     public GameObject useGeolocation;
     public Toggle useGeolocationComponent;
 
+    // confirmation of registration
+    public GameObject confiirmation;
+    public TextMeshProUGUI scrapIDLabel;
+    public Button scanNewScrapButton;
+
+    public GameObject takePicureObject;
+    public Button takePicureButton;
+
+    // capture messages
+    private bool _displayMessages = true;
+    public GameObject onePoint;
+    public GameObject twoPoints;
+    public GameObject threePoints;
+
     // ----------- AR COMPONENTS ---------------
     // To manage the rays casted by the users
     private ARRaycastManager _raycastManager;
@@ -88,6 +104,7 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // Disable the capturing capabilities when a loop of points has been selected
     private bool _capturingDisabled;
+    private bool _confirmationUp = false;
 
     // Indicates if the raycaster has intersected with a plane
     private bool _hasHit = false;
@@ -96,7 +113,7 @@ public class ScrapsPointsManager : MonoBehaviour
 
     // ---------- GEOMETRY STUFF -------------
     // Default scale of the points
-    private Vector3 _sphereScale = new Vector3(0.01f, 0.01f, 0.01f);
+    private Vector3 _sphereScale = new Vector3(0.01f, 0.001f, 0.01f);
 
     // Z Offset for the text
     private Vector3 _yOffset = new Vector3(0f, 0.01f, 0f);
@@ -163,6 +180,38 @@ public class ScrapsPointsManager : MonoBehaviour
             (_inAnchorMode) // If in anchor mode and not close enough to anchor, disable the anchor mode and reset reticle
         {
             SetReticleToCaptureMode();
+        }
+    }
+
+    void DisplayMessages()
+    {
+        onePoint.SetActive(false);
+        twoPoints.SetActive(false);
+        threePoints.SetActive(false);
+        
+        if (_displayMessages)
+        {
+            // There needs to be at least 2 points set to anchor to the initial point
+            if (scrapPoints.Count < 1)
+            {
+                onePoint.SetActive(true);
+                twoPoints.SetActive(false);
+                threePoints.SetActive(false);
+            }
+
+            if (scrapPoints.Count >= 1)
+            {
+                onePoint.SetActive(false);
+                twoPoints.SetActive(true);
+                threePoints.SetActive(false);
+            }
+
+            if (scrapPoints.Count > 2)
+            {
+                onePoint.SetActive(false);
+                twoPoints.SetActive(false);
+                threePoints.SetActive(true);
+            }
         }
     }
 
@@ -236,7 +285,7 @@ public class ScrapsPointsManager : MonoBehaviour
 
         // Set up the text mesh
         distanceTextMesh.text = textValue;
-        distanceTextMesh.fontSize = 0.1f;
+        distanceTextMesh.fontSize = 0.05f;
         distanceTextMesh.color = Color.black;
         distanceTextMesh.alignment = TextAlignmentOptions.Center;
         distanceTextMesh.transform.position = ((point1 + point2) / 2f) + _yOffset;
@@ -270,8 +319,8 @@ public class ScrapsPointsManager : MonoBehaviour
             // Make sure there is a material attached
             distanceLine.material = new Material(Shader.Find("Sprites/Default"));
             distanceLine.positionCount = 2;
-            distanceLine.startWidth = 0.01f;
-            distanceLine.endWidth = 0.01f;
+            distanceLine.startWidth = 0.001f;
+            distanceLine.endWidth = 0.001f;
             distanceLine.startColor = Color.white; // Set the start color of the line
             distanceLine.endColor = Color.white; // Set the end color of the line
             distanceLine.SetPosition(0, point1);
@@ -305,13 +354,15 @@ public class ScrapsPointsManager : MonoBehaviour
             _scrapPointsCollection.AddScrap(scrapPoints[i].transform.position, i);
         }
 
+        _displayMessages = false;
         DeactivateCaptureUI();
 
-        ActivateRegisterForm();
+        takePicureObject.SetActive(true);
     }
 
     void SubmitScrap()
     {
+        _displayMessages = false;
         // Extracting information
         string enteredScrapNotes = scrapNotes.text;
         string selectedTextileClass = textileClass.options[textileClass.value].text;
@@ -338,15 +389,41 @@ public class ScrapsPointsManager : MonoBehaviour
             requestAddress += ("&geolocation=" + selectedUseGeolocation);
         }
 
-        UnityWebRequest www = UnityWebRequest.Put(requestAddress, "");
-        www.SendWebRequest();
+        UnityWebRequest request = UnityWebRequest.Put(requestAddress, "");
+
+        var operation = request.SendWebRequest();
+        while (!operation.isDone)
+        {
+        }
+
+        string scrapInfo;
+
+        // Check for errors
+        if (request.responseCode == 204)
+        {
+            // TODO handle errors
+        }
+        else
+        {
+            // Request successful, get the response
+            scrapInfo = request.downloadHandler.text;
+            string pattern = "\"id\"\\s*:\\s*\"([^\"]*)\"";
+            MatchCollection matches = Regex.Matches(scrapInfo, pattern);
+            ActivateScanNewScrapsInterface(matches[0].Groups[1].Value);
+        }
 
         DeactivateRegisterForm();
-        ResetPoints();
+    }
+
+    private void ActivateScanNewScrapsInterface(string scrapID)
+    {
+        confiirmation.SetActive(true);
+        scrapIDLabel.SetText("Scrap ID: " + scrapID);
     }
 
     private void ResetPoints()
     {
+        confiirmation.SetActive(false);
         foreach (var scrapPoint in scrapPoints)
         {
             Destroy(scrapPoint);
@@ -376,14 +453,23 @@ public class ScrapsPointsManager : MonoBehaviour
         SetReticleToCaptureMode();
         // Re-enable capturing
         _capturingDisabled = false;
+        _confirmationUp = false;
         // Remove capturing message
         scrapCaptureMessage.SetActive(false);
+        _displayMessages = true;
+    }
+
+    void TakeScreenshot()
+    {
+        _timestamp = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString();
+        imageUploader.UploadScreenshot(_timestamp);
+        ActivateRegisterForm();
+        takePicureObject.SetActive(false);
     }
 
     void ActivateRegisterForm()
     {
-        _timestamp = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString();
-        imageUploader.UploadScreenshot(_timestamp);
+        _confirmationUp = true;
         registerForm.SetActive(true);
     }
 
@@ -417,6 +503,10 @@ public class ScrapsPointsManager : MonoBehaviour
 
         // Get the toggle geolocation component directly
         useGeolocationComponent = useGeolocation.GetComponent<Toggle>();
+
+        // scan new scraps
+        scanNewScrapButton.onClick.AddListener(ResetPoints);
+        takePicureButton.onClick.AddListener(TakeScreenshot);
     }
 
     // Update is called once per frame
@@ -424,21 +514,28 @@ public class ScrapsPointsManager : MonoBehaviour
     {
         SetRaycastManager();
         SetHasHit();
+        DisplayMessages();
+
         if (_hasHit && !_capturingDisabled)
         {
             if (initialMessage.activeSelf)
             {
                 DisableInitialMessage();
             }
-
             UpdateReticle();
             UpdateCloserMessage();
             CheckIfInAnchorZone();
             CheckHitPoints();
             DrawDistanceLines();
         }
+        else if (_confirmationUp)
+        {
+            
+            scrapCaptureMessage.SetActive(false);
+        }
         else if (_capturingDisabled)
         {
+            _displayMessages = false;
             scrapCaptureMessage.SetActive(true);
         }
     }
