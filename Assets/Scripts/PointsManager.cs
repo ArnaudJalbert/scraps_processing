@@ -368,10 +368,10 @@ public class ScrapsPointsManager : MonoBehaviour
         string selectedTextileClass = textileClass.options[textileClass.value].text;
         string selectedTextileType = textileType.options[textileType.value].text;
         // TODO: Get real data here
-        string scrapColor = "f0f";
+        string scrapColor = "000";
 
         string baseRequest =
-            "https://scraps-processing-api.fly.dev/scraps?textile-class={0}&textile-type={1}&color={2}&owner={3}&note='{4}'&dimensions={5}&image={6}";
+            "https://scraps-processing-api-delicate-pond-5077.fly.dev/scraps?textile-class={0}&textile-type={1}&color={2}&owner={3}&note='{4}'&dimensions={5}&image={6}";
         string requestAddress = String.Format(
             baseRequest,
             selectedTextileClass,
