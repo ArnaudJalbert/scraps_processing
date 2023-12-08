@@ -128,8 +128,11 @@ public class ScrapsPointsManager : MonoBehaviour
     void SetRaycastManager()
     {
         _hits = new List<ARRaycastHit>();
-        _raycastManager.Raycast(new Vector2(Screen.width / 2, Screen.height / 2), _hits,
-            TrackableType.PlaneWithinPolygon);
+        _raycastManager.Raycast(
+            new Vector2(Screen.width / 2, Screen.height / 2),
+            _hits,
+            TrackableType.PlaneWithinPolygon
+        );
     }
 
     void SetHasHit()
@@ -176,8 +179,7 @@ public class ScrapsPointsManager : MonoBehaviour
         {
             SetReticleToAnchorMode();
         }
-        else if
-            (_inAnchorMode) // If in anchor mode and not close enough to anchor, disable the anchor mode and reset reticle
+        else if (_inAnchorMode) // If in anchor mode and not close enough to anchor, disable the anchor mode and reset reticle
         {
             SetReticleToCaptureMode();
         }
@@ -188,7 +190,7 @@ public class ScrapsPointsManager : MonoBehaviour
         onePoint.SetActive(false);
         twoPoints.SetActive(false);
         threePoints.SetActive(false);
-        
+
         if (_displayMessages)
         {
             // There needs to be at least 2 points set to anchor to the initial point
@@ -232,7 +234,8 @@ public class ScrapsPointsManager : MonoBehaviour
     {
         // If the user is touching the screen and make sure it only happens when we first touch the screen
         if (!EventSystem.current.IsPointerOverGameObject() &&
-            Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            Input.touchCount > 0 &&
+            Input.GetTouch(0).phase == TouchPhase.Began)
         {
             // Create a new sphere to place into space as a point
             GameObject point = CreatePoint();
@@ -522,6 +525,7 @@ public class ScrapsPointsManager : MonoBehaviour
             {
                 DisableInitialMessage();
             }
+
             UpdateReticle();
             UpdateCloserMessage();
             CheckIfInAnchorZone();
@@ -530,7 +534,6 @@ public class ScrapsPointsManager : MonoBehaviour
         }
         else if (_confirmationUp)
         {
-            
             scrapCaptureMessage.SetActive(false);
         }
         else if (_capturingDisabled)
