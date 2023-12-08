@@ -7,7 +7,7 @@ namespace SaveScreenshot
     public class ScreenshotUploader : MonoBehaviour
     {
         public GameObject ui;
-        private string serverURL = "https://scraps-processing-api.fly.dev/upload"; // Replace with your Flask server URL
+        private string serverURL = "https://scraps-processing-api-delicate-pond-5077.fly.dev/upload"; // Replace with your Flask server URL
 
         public void UploadScreenshot(string timestamp)
         {   

@@ -13,7 +13,7 @@ public class RegisterForm : MonoBehaviour
 
     void GetTextileTypes()
     {
-        string requestAddress = "https://scraps-processing-api.fly.dev/textile-types";
+        string requestAddress = "https://scraps-processing-api-delicate-pond-5077.fly.dev/textile-types";
         string data;
         UnityWebRequest request = UnityWebRequest.Get(requestAddress);
         var operation = request.SendWebRequest();

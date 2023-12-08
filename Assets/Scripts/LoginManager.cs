@@ -56,7 +56,7 @@ public class LoginManager : MonoBehaviour
         
         
         string baseRequest =
-            "https://scraps-processing-api.fly.dev/create-user?username={0}&email={1}&instagram={2}";
+            "https://scraps-processing-api-delicate-pond-5077.fly.dev/create-user?username={0}&email={1}&instagram={2}";
         string requestAddress = String.Format(
             baseRequest,
             username,
@@ -101,7 +101,7 @@ public class LoginManager : MonoBehaviour
         string responseText;
         
         string baseRequest =
-            "https://scraps-processing-api.fly.dev/user/{0}/user-id";
+            "https://scraps-processing-api-delicate-pond-5077.fly.dev/user/{0}/user-id";
         string requestAddress = String.Format(
             baseRequest,
             searchUsername
